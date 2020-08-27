@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script type="text/javascript" src="js/jquery-3.5.1.min.js"></script>
+	<script type="text/javascript" src="js/jszip.min.js"></script>
+	<script type="text/javascript" src="js/FileSaver.min.js"></script>
+	
+	<script type="text/javascript">
+		
+		function getBase64Image(url) {
+			var promise = new Promise(function(resolve, reject) {
+				var img = new Image();
+				img.crossOrigin = "Anonymous"; 
+				img.onload = function() {
+					var canvas = document.createElement("canvas");
+					canvas.width = img.width;
+					canvas.height = img.height;
+					var ctx = canvas.getContext("2d");
+					ctx.drawImage(img, 0, 0);
+					var dataURL = canvas.toDataURL("image/png");
+					resolve(dataURL.replace(/^data:image\/(png|jpg|jpeg|pdf);base64,/, ""));
+				};  
+				
+				img.src = url;      
+			});
+
+			return promise;
+		};
+
+		function gerarZip(zip){
+			zip.generateAsync({type:"blob"})
+				.then(function(content) {
+               		saveAs(content, "example.zip");
+      			});
+		}
+
+		function zip (){
+			var zip = new JSZip();
+			var folder = zip.folder("arquivos");
+		    folder.file("Hello.txt", $.get("arquivos/Hello.txt")); 
+		    folder.file("Hello.csv", $.get("arquivos/Hello.csv")); 
+
+			var url = "arquivos/Hello.jpg";
+			var promise = getBase64Image(url);
+
+			promise.then(function (dataURL) {
+			  folder.file("Hello.jpg", dataURL, {base64: true});
+			})
+			.then(function() {
+				gerarZip(zip);
+			});
+		}
+	</script>
+</head>
+	<body>
+
+		<h2>ZIP HTML Buttons</h2>
+
+		<button onclick="zip();">Gerar Rar</button>
+
+	</body>
+</html>
